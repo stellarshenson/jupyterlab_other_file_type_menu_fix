@@ -48,8 +48,6 @@ check_dependencies:
 	@MISSING=""; \
 	command -v node >/dev/null 2>&1 || MISSING="$$MISSING node"; \
 	command -v npm >/dev/null 2>&1 || MISSING="$$MISSING npm"; \
-	command -v yarn >/dev/null 2>&1 || MISSING="$$MISSING yarn"; \
-	command -v twine >/dev/null 2>&1 || MISSING="$$MISSING twine"; \
 	if [ -n "$$MISSING" ]; then \
 		echo "Missing dependencies:$$MISSING"; \
 		echo "Installing missing dependencies..."; \
