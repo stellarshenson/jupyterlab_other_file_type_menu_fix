@@ -16,8 +16,8 @@
 
 Fixes the broken context menu for non-standard file types in JupyterLab. When you open files like LICENSE, .gitignore, Dockerfile, or any file without a registered type and right-click, the context menu shows stale items from the previously focused widget - items are inert and hover highlighting is broken. This extension forces proper widget activation before the Lumino context menu resolves, ensuring the correct menu appears.
 
-| Without fix | With fix |
-|---|---|
+| Without fix                                                | With fix                                             |
+| ---------------------------------------------------------- | ---------------------------------------------------- |
 | ![Context menu broken](screenshot-license-contextmenu.png) | ![Context menu working](screenshot-license-open.png) |
 
 ## Features

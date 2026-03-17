@@ -20,15 +20,10 @@ import { Widget } from '@lumino/widgets';
  * own DOM node that calls shell.activateById(). By the time Lumino's
  * document-level handler processes the event, the widget is already active.
  */
-class ContextMenuFixExtension
-  implements DocumentRegistry.WidgetExtension
-{
+class ContextMenuFixExtension implements DocumentRegistry.WidgetExtension {
   constructor(private shell: JupyterFrontEnd.IShell) {}
 
-  createNew(
-    widget: Widget,
-    context: DocumentRegistry.Context
-  ): IDisposable {
+  createNew(widget: Widget, context: DocumentRegistry.Context): IDisposable {
     const shell = this.shell;
 
     const handler = () => {
