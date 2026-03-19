@@ -1,4 +1,5 @@
-# Makefile for Jupyterlab extensions version 1.28
+# Makefile for Jupyterlab extensions version 1.29
+# changelog: use jlpm instead of yarn, python -m twine, prettier after npm install, auto-commit after publish
 # author: Stellars Henson <konrad.jelen@gmail.com>
 # License: MIT Open Source License
 
@@ -21,7 +22,8 @@ increment_version:
 ## build packages
 build: clean increment_version check_dependencies
 	npm install
-	yarn install
+	jlpm install
+	npx prettier --write package-lock.json package.json
 	python -m build
 
 ## install package
@@ -59,7 +61,10 @@ check_dependencies:
 ## publish package to public repository
 publish: check_dependencies install
 	npm publish --access public
-	twine upload dist/*
+	python -m twine upload dist/*
+	git add package.json package-lock.json
+	git commit -m "chore: post-publish $$(node -p "require('./package.json').version") package metadata"
+	git push
 
 ## install all required build dependencies
 install_dependencies:
