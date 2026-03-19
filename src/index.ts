@@ -17,30 +17,37 @@ import { Widget } from '@lumino/widgets';
  *    Lumino resolves commands against the wrong (previously active) widget,
  *    producing a stale and non-functional menu.
  *
- * 2. LSP crash: the LSP adapter's initOnceReady calls get language which
- *    does mimeType.split('/') - if the model has no MIME type (unregistered
- *    file), this throws TypeError. The virtual document is then disposed,
- *    and all LSP context menu items crash during isVisible/isEnabled checks.
+ * 2. LSP crash: icon-providing extensions (e.g. vscode-icons) register file
+ *    types with pattern matches but without mimeTypes. The LSP adapter's
+ *    get mimeType getter calls getFileTypeForModel() which returns these
+ *    incomplete types, then accesses mimeTypes[0] on undefined, causing a
+ *    TypeError that disposes the virtual document and breaks all LSP context
+ *    menu items.
  *
- * Fix: in createNew, set a default MIME type on models that lack one (before
- * the LSP adapter's async init runs), and attach a capture-phase contextmenu
+ * Fix: in createNew, patch incomplete file types in the document registry to
+ * include a default mimeTypes array, and attach a capture-phase contextmenu
  * listener that calls shell.activateById() before Lumino processes the event.
  */
 class ContextMenuFixExtension implements DocumentRegistry.WidgetExtension {
-  constructor(private shell: JupyterFrontEnd.IShell) {}
+  private _patched = false;
+
+  constructor(
+    private shell: JupyterFrontEnd.IShell,
+    private docRegistry: DocumentRegistry
+  ) {}
 
   createNew(widget: Widget, context: DocumentRegistry.Context): IDisposable {
     const shell = this.shell;
 
-    // Ensure the model has a MIME type so the LSP adapter's language getter
-    // doesn't crash on undefined.split('/'). This runs synchronously before
-    // the LSP adapter's async initOnceReady fires.
-    const model = context.model as any;
-    if (model && !model.mimeType) {
-      try {
-        model.mimeType = 'text/plain';
-      } catch {
-        // mimeType may be read-only on some model types
+    // Patch file types that lack mimeTypes once on first widget creation.
+    // Icon extensions (e.g. vscode-icons) register types with patterns but
+    // no mimeTypes, causing LSP to crash when it accesses mimeTypes[0].
+    if (!this._patched) {
+      this._patched = true;
+      for (const ft of this.docRegistry.fileTypes()) {
+        if (!ft.mimeTypes || ft.mimeTypes.length === 0) {
+          (ft as any).mimeTypes = ['text/plain'];
+        }
       }
     }
 
@@ -78,7 +85,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
     app.docRegistry.addWidgetExtension(
       'Editor',
-      new ContextMenuFixExtension(app.shell)
+      new ContextMenuFixExtension(app.shell, app.docRegistry)
     );
   }
 };
