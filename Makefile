@@ -1,5 +1,9 @@
-# Makefile for Jupyterlab extensions version 1.29
-# changelog: use jlpm instead of yarn, python -m twine, prettier after npm install, auto-commit after publish
+# Makefile for Jupyterlab extensions version 1.31
+# changelog:
+#   1.31 - mrproper now removes ui-tests/node_modules (Playwright browser binaries)
+#   1.30 - check twine in check_dependencies, ensure publish doesn't fail on missing twine
+#   1.29 - replace yarn with jlpm, add prettier format, auto-commit and push after publish
+#   1.28 - initial versioned Makefile
 # author: Stellars Henson <konrad.jelen@gmail.com>
 # License: MIT Open Source License
 
@@ -50,6 +54,7 @@ check_dependencies:
 	@MISSING=""; \
 	command -v node >/dev/null 2>&1 || MISSING="$$MISSING node"; \
 	command -v npm >/dev/null 2>&1 || MISSING="$$MISSING npm"; \
+	python -m twine --version >/dev/null 2>&1 || MISSING="$$MISSING twine"; \
 	if [ -n "$$MISSING" ]; then \
 		echo "Missing dependencies:$$MISSING"; \
 		echo "Installing missing dependencies..."; \
@@ -78,7 +83,7 @@ upgrade: check_dependencies
 
 ## cleanup all build and metabuild artefacts
 mrproper: clean uninstall
-	rm -rf node_modules .yarn || true
+	rm -rf node_modules .yarn ui-tests/node_modules || true
 
 ## prints the list of available commands
 help:
